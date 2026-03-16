@@ -560,7 +560,7 @@
     <div class="header-right">
       <span class="live-badge" id="live-indicator" style="display:none">● Live</span>
       <span class="last-updated" id="last-updated"></span>
-      <button class="refresh-btn" onclick="fetchGames()">↻ Refresh</button>
+      <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh <span id="refresh-countdown"></span></button>
     </div>
   </header>
 
@@ -1132,9 +1132,46 @@ function setRoundFilter(r) {
   renderGames();
 }
 
+// ─── AUTO-REFRESH (5 min) ────────────────────────────────────────────────────
+const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+let countdownSeconds = AUTO_REFRESH_MS / 1000;
+let autoRefreshTimer = null;
+let countdownTimer  = null;
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownSeconds = AUTO_REFRESH_MS / 1000;
+  const el = document.getElementById('refresh-countdown');
+  countdownTimer = setInterval(() => {
+    countdownSeconds--;
+    if (el) {
+      const m = Math.floor(countdownSeconds / 60);
+      const s = String(countdownSeconds % 60).padStart(2, '0');
+      el.textContent = `(${m}:${s})`;
+    }
+    if (countdownSeconds <= 0) clearInterval(countdownTimer);
+  }, 1000);
+}
+
+function scheduleAutoRefresh() {
+  clearTimeout(autoRefreshTimer);
+  autoRefreshTimer = setTimeout(() => {
+    fetchGames();
+    startCountdown();
+    scheduleAutoRefresh();
+  }, AUTO_REFRESH_MS);
+}
+
+function manualRefresh() {
+  fetchGames();
+  startCountdown();
+  scheduleAutoRefresh();
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 fetchGames();
-setInterval(fetchGames, 30000); // auto-refresh every 30 seconds
+startCountdown();
+scheduleAutoRefresh();
 </script>
 </body>
 </html>
