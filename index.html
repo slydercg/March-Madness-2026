@@ -618,7 +618,8 @@ const GRID = [
 ];
 
 const ROUND_PRIZES = { 1:10, 2:15, 3:30, 4:50, 5:105, 6:250 };
-const ROUND_NAMES  = { 0:'First Four', 1:'1st Round', 2:'2nd Round', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
+const ROUND_NAMES       = { 0:'First Four', 1:'1st Round', 2:'2nd Round', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
+const GAME_CARD_LABELS  = { 0:'Game', 1:'Game', 2:'Game', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
 
 // Tournament phase date ranges (YYYYMMDD strings)
 const TOURNAMENT_PHASES = [
@@ -654,7 +655,13 @@ const ESPN_ROUND_MAP = {
   'Sweet 16': 3, 'sweet 16': 3, 'Sweet Sixteen': 3,
   'Elite Eight': 4, 'elite eight': 4, 'Elite 8': 4,
   'Final Four': 5, 'final four': 5,
-  'National Championship': 6, 'Championship': 6, 'championship': 6,
+  'National Championship': 6,
+};
+
+// Map TOURNAMENT_PHASES labels to roundNum for date-based fallback
+const PHASE_ROUND_MAP = {
+  'First Four': 0, '1st Round': 1, '2nd Round': 2,
+  'Sweet 16': 3, 'Elite 8': 4, 'Final Four': 5, 'Championship': 6,
 };
 
 function getSquareWinner(winnerScore, loserScore) {
@@ -695,6 +702,12 @@ function detectRound(event, competition) {
     const round = competition.series?.summary || '';
     for (const [key, val] of Object.entries(ESPN_ROUND_MAP)) {
       if (round.toLowerCase().includes(key.toLowerCase())) return val;
+    }
+    // Fallback: derive round from the game date using TOURNAMENT_PHASES
+    if (event.date) {
+      const dateKey = event.date.slice(0, 10).replace(/-/g, '');
+      const phase = phaseForDate(dateKey);
+      if (phase) return PHASE_ROUND_MAP[phase.label] ?? null;
     }
   }
   return null;
@@ -906,7 +919,7 @@ function gameCard(game) {
       </div>`;
   }
 
-  const roundLabel = game.roundNum ? ROUND_NAMES[game.roundNum] || '' : '';
+  const roundLabel = game.roundNum != null ? GAME_CARD_LABELS[game.roundNum] || '' : '';
   const gameDate   = game.date ? new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
   const regionTag  = game.region ? ` · ${game.region}` : '';
 
