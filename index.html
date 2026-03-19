@@ -31,6 +31,13 @@
       min-height: 100vh;
     }
 
+    /* STICKY TOP WRAPPER */
+    .sticky-top-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
     /* HEADER */
     header {
       background: linear-gradient(135deg, var(--green-dark), var(--green));
@@ -41,9 +48,6 @@
       flex-wrap: wrap;
       gap: 8px;
       border-bottom: 3px solid var(--gold);
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
     .header-title {
       display: flex;
@@ -129,6 +133,12 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+    /* STICKY SUBHEADER */
+    .sticky-subheader {
+      background: var(--bg);
+      padding: 12px 20px 12px;
+    }
 
     /* DATE NAV */
     .date-nav {
@@ -230,7 +240,7 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
     .round-chip {
       background: var(--bg-card);
@@ -719,16 +729,21 @@
     </div>
   </header>
 
+  <div class="sticky-top-wrapper">
   <nav>
     <button class="tab-btn active" onclick="switchTab('games', this)">🏀 Live Games</button>
     <button class="tab-btn" onclick="switchTab('grid', this)">📊 Pool Grid</button>
     <button class="tab-btn" onclick="switchTab('leaderboard', this)">🏆 Leaderboard</button>
   </nav>
 
+  <div id="sticky-subheader" class="sticky-subheader">
+    <div id="date-nav"></div>
+    <div class="round-filter" id="round-filter"></div>
+  </div>
+  </div><!-- end sticky-top-wrapper -->
+
   <main>
     <div id="tab-games" class="tab-content active">
-      <div id="date-nav"></div>
-      <div class="round-filter" id="round-filter"></div>
       <div id="games-container"></div>
     </div>
     <div id="tab-grid" class="tab-content">
@@ -1498,6 +1513,9 @@ function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(`tab-${tabId}`).classList.add('active');
   btn.classList.add('active');
+  // Show/hide sticky subheader (date-nav + round-filter) only for Live Games tab
+  const subheader = document.getElementById('sticky-subheader');
+  if (subheader) subheader.style.display = tabId === 'games' ? '' : 'none';
 }
 
 function setRoundFilter(r) {
