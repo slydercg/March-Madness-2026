@@ -687,11 +687,60 @@
     .rank-1 .lb-rank { color: #ffd700; }
     .rank-2 .lb-rank { color: #c0c0c0; }
     .rank-3 .lb-rank { color: #cd7f32; }
-    .lb-name { flex: 1; font-size: 0.95rem; font-weight: 700; }
-    .lb-wins { font-size: 0.78rem; color: var(--text-muted); min-width: 60px; text-align: center; }
+    .lb-name-wrap { flex: 1; position: relative; }
+    .lb-name { font-size: 0.95rem; font-weight: 700; cursor: default; }
+    .lb-wins {
+      font-size: 0.78rem; color: var(--text-muted); min-width: 60px; text-align: center;
+      cursor: pointer; user-select: none; transition: color 0.15s;
+      display: flex; align-items: center; gap: 4px; justify-content: center;
+    }
+    .lb-wins:hover { color: var(--gold-light); }
+    .lb-wins .expand-arrow { font-size: 0.6rem; transition: transform 0.2s; }
+    .lb-wins .expand-arrow.open { transform: rotate(180deg); }
     .lb-total { font-size: 1.15rem; font-weight: 800; color: var(--win); min-width: 80px; text-align: right; }
     .lb-breakdown { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
     .empty-lb { text-align: center; color: var(--text-muted); padding: 40px; }
+
+    .lb-row-wrapper { margin-bottom: 8px; }
+    .lb-row-wrapper .lb-row { margin-bottom: 0; }
+
+    /* Leaderboard win details dropdown */
+    .lb-details {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      margin-top: 0;
+    }
+    .lb-details.open { max-height: 600px; margin-top: 8px; }
+    .lb-detail-game {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; margin: 4px 0;
+      background: rgba(0,0,0,0.2); border-radius: 8px;
+      font-size: 0.78rem; border-left: 3px solid var(--win);
+    }
+    .lb-detail-round {
+      font-size: 0.65rem; font-weight: 700; color: var(--gold-light);
+      min-width: 70px; text-transform: uppercase;
+    }
+    .lb-detail-matchup { flex: 1; color: var(--text); }
+    .lb-detail-score { color: var(--text-muted); font-weight: 600; }
+    .lb-detail-prize { font-weight: 800; color: var(--win); min-width: 40px; text-align: right; }
+
+    /* Leaderboard name tooltip */
+    .lb-tooltip {
+      position: absolute; bottom: calc(100% + 8px); left: 0;
+      background: #1a2940; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      min-width: 200px; max-width: 300px;
+      z-index: 200; pointer-events: none;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .lb-name-wrap:hover .lb-tooltip {
+      opacity: 1; transform: translateY(0); pointer-events: auto;
+    }
+    .lb-tooltip-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 6px; color: var(--gold-light); }
+    .lb-tooltip-stat { font-size: 0.72rem; color: var(--text-muted); margin: 3px 0; display: flex; justify-content: space-between; }
+    .lb-tooltip-stat span:last-child { font-weight: 700; color: var(--text); }
 
     /* Loading/Error */
     .loader {
@@ -1476,24 +1525,69 @@ function renderLeaderboard() {
         .sort(([a],[b]) => a-b)
         .map(([r, amt]) => `${ROUND_NAMES[r]||r}: $${amt}`)
         .join(' · ');
-      const wins = Object.values(row.bd).reduce((s,v) => s + (v / (ROUND_PRIZES[Object.keys(row.bd).find(k=>row.bd[k]===v)] || 1)|0), 0);
-      // Count actual wins
-      const wcount = state.allGames.filter(g => g.isCompleted && g.squareWinner?.name === row.name).length;
+
+      // Get individual game wins for this person
+      const wonGames = state.allGames.filter(g => g.isCompleted && g.squareWinner?.name === row.name);
+      const wcount = wonGames.length;
+
+      // Tooltip stats
+      const avgPrize = wcount > 0 ? Math.round(row.total / wcount) : 0;
+      const roundsWon = [...new Set(wonGames.map(g => g.roundNum).filter(r => r != null))];
+      const roundsList = roundsWon.sort((a,b) => a-b).map(r => ROUND_NAMES[r] || r).join(', ');
+
+      // Build game detail rows for dropdown
+      let detailRows = '';
+      wonGames.sort((a,b) => (a.roundNum ?? 99) - (b.roundNum ?? 99)).forEach(g => {
+        const roundName = g.roundNum != null ? ROUND_NAMES[g.roundNum] : 'N/A';
+        const matchup = g.name || `${g.away.name} vs ${g.home.name}`;
+        const sw = g.squareWinner;
+        detailRows += `
+          <div class="lb-detail-game">
+            <div class="lb-detail-round">${roundName}</div>
+            <div class="lb-detail-matchup">${matchup}</div>
+            <div class="lb-detail-score">${sw.winScore} – ${sw.loseScore}</div>
+            <div class="lb-detail-prize">$${sw.prize || 0}</div>
+          </div>`;
+      });
+
+      const uid = `lb-detail-${i}`;
       html += `
-        <div class="lb-row ${rankClass}">
-          <div class="lb-rank">${medal}</div>
-          <div>
-            <div class="lb-name">${row.name}</div>
-            <div class="lb-breakdown">${bdParts}</div>
+        <div class="lb-row-wrapper">
+          <div class="lb-row ${rankClass}">
+            <div class="lb-rank">${medal}</div>
+            <div class="lb-name-wrap">
+              <div class="lb-name">${row.name}</div>
+              <div class="lb-breakdown">${bdParts}</div>
+              <div class="lb-tooltip">
+                <div class="lb-tooltip-title">${row.name}</div>
+                <div class="lb-tooltip-stat"><span>Total Winnings</span><span>$${row.total}</span></div>
+                <div class="lb-tooltip-stat"><span>Games Won</span><span>${wcount}</span></div>
+                <div class="lb-tooltip-stat"><span>Avg per Win</span><span>$${avgPrize}</span></div>
+                ${roundsList ? `<div class="lb-tooltip-stat"><span>Rounds Won</span><span>${roundsList}</span></div>` : ''}
+              </div>
+            </div>
+            <div class="lb-wins" onclick="toggleLbDetail('${uid}', this)">
+              ${wcount} win${wcount !== 1 ? 's':''}
+              <span class="expand-arrow">▼</span>
+            </div>
+            <div class="lb-total">$${row.total}</div>
           </div>
-          <div class="lb-wins">${wcount} win${wcount !== 1 ? 's':''}</div>
-          <div class="lb-total">$${row.total}</div>
+          <div class="lb-details" id="${uid}">${detailRows}</div>
         </div>`;
     });
   }
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ─── LEADERBOARD DETAIL TOGGLE ───────────────────────────────────────────────
+function toggleLbDetail(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const arrow = btn.querySelector('.expand-arrow');
+  el.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open');
 }
 
 // ─── DATE NAV ────────────────────────────────────────────────────────────────
