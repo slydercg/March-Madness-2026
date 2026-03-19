@@ -247,6 +247,35 @@
     .round-chip.active { background: var(--green); border-color: var(--green-light); color: white; }
 
     /* GAME CARDS */
+    .date-section { margin-bottom: 28px; }
+    .date-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 4px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .date-section-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .date-section-header.past  .date-section-label { color: var(--text-muted); }
+    .date-section-header.today .date-section-label { color: var(--accent); }
+    .date-section-header.future .date-section-label { color: var(--text); }
+    .date-section-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .date-section-tag.today-tag { background: var(--accent); color: #000; }
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -435,13 +464,15 @@
       line-height: 1.2;
       text-align: center;
     }
-    .cell-wins { font-size: 0.6rem; color: var(--gold-light); }
-    .grid-cell.won-1 { background: rgba(34,197,94,0.15); }
-    .grid-cell.won-2 { background: rgba(34,197,94,0.28); }
-    .grid-cell.won-3 { background: rgba(34,197,94,0.42); }
-    .grid-cell.won-4 { background: rgba(34,197,94,0.56); }
-    .grid-cell.won-5 { background: rgba(34,197,94,0.70); }
-    .grid-cell.won-6 { background: rgba(34,197,94,0.85); }
+    .cell-wins { font-size: 0.6rem; font-weight: 700; color: var(--gold-light); }
+    .cell-live-dot { font-size: 0.55rem; color: #f87171; font-weight: 700; }
+    .grid-cell.won-1   { background: rgba(34,197,94,0.15); }
+    .grid-cell.won-2   { background: rgba(34,197,94,0.28); }
+    .grid-cell.won-3   { background: rgba(34,197,94,0.42); }
+    .grid-cell.won-4   { background: rgba(34,197,94,0.56); }
+    .grid-cell.won-5   { background: rgba(34,197,94,0.70); }
+    .grid-cell.won-6   { background: rgba(34,197,94,0.85); }
+    .grid-cell.live-cell { background: rgba(248,113,113,0.18); outline: 1px solid rgba(248,113,113,0.5); }
     .grid-cell:hover { filter: brightness(1.25); }
     .grid-cell .cell-tooltip {
       display: none;
@@ -449,21 +480,143 @@
       bottom: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
-      background: #1e3354;
+      background: #1a2744;
       border: 1px solid var(--gold);
       border-radius: 8px;
-      padding: 8px 12px;
-      min-width: 200px;
+      padding: 10px 14px;
+      min-width: 220px;
+      max-width: 280px;
       z-index: 200;
       pointer-events: none;
       font-size: 0.72rem;
-      line-height: 1.6;
+      line-height: 1.5;
       color: var(--text);
       text-align: left;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     .grid-cell:hover .cell-tooltip { display: block; }
-    .tooltip-title { font-weight: 700; color: var(--gold-light); margin-bottom: 4px; }
-    .tooltip-game { color: var(--text-muted); font-size: 0.68rem; }
+    .tooltip-title { font-weight: 700; color: var(--gold-light); margin-bottom: 6px; font-size: 0.78rem; }
+    .tooltip-game  { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .tooltip-game:last-child { border-bottom: none; }
+    .tip-meta   { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 2px; }
+    .tip-score  { color: var(--text); font-size: 0.7rem; }
+    .tip-prize  { color: #4ade80; font-weight: 700; margin-left: 4px; }
+    .tip-live   { color: #f87171; font-weight: 700; margin-left: 4px; }
+    .tip-total  { margin-top: 6px; color: #c8a21a; font-weight: 700; font-size: 0.74rem; border-top: 1px solid rgba(200,162,26,0.3); padding-top: 6px; }
+
+    /* GAME RESULTS PANEL */
+    .results-panel {
+      margin-top: 28px;
+      max-width: 860px;
+    }
+    .results-panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      margin-bottom: 14px;
+    }
+    .results-day-group { margin-bottom: 18px; }
+    .results-day-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .result-row.result-live {
+      border-color: rgba(248,113,113,0.4);
+      background: rgba(248,113,113,0.07);
+    }
+    .result-round-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .result-live-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #f87171;
+      background: rgba(248,113,113,0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      animation: pulse-live 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-live {
+      0%,100% { opacity:1; } 50% { opacity:0.5; }
+    }
+    .result-score {
+      flex: 1;
+      font-size: 0.78rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .result-score .winner-name {
+      color: #4ade80;
+      font-weight: 700;
+    }
+    .result-score .loser-name {
+      color: var(--text-muted);
+    }
+    .result-arrow {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+    .result-winner-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #4ade80;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .result-winner-chip.live-chip {
+      background: rgba(248,113,113,0.1);
+      border-color: rgba(248,113,113,0.3);
+      color: #f87171;
+    }
+    .result-prize {
+      font-size: 0.65rem;
+      color: var(--gold-light);
+      font-weight: 700;
+      margin-left: 3px;
+    }
+    .results-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 24px;
+    }
 
     /* LEADERBOARD */
     .leaderboard-wrap { max-width: 700px; }
@@ -619,13 +772,13 @@ const GRID = [
   ['Mike Piazza','Stephanie Laird','Mandy Jakovich','Lucy Lawrence','Mark Slyder','Rick Bednar','Eric Jones','Tina Bednar','Brad Daugherty','Mark Hoisington'],
 ];
 
-const ROUND_PRIZES = { 1:10, 2:15, 3:30, 4:50, 5:105, 6:250 };
+const ROUND_PRIZES = { 0:10, 1:10, 2:15, 3:30, 4:50, 5:105, 6:250 };
 const ROUND_NAMES       = { 0:'First Four', 1:'1st Round', 2:'2nd Round', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
 const GAME_CARD_LABELS  = { 0:'Game', 1:'Game', 2:'Game', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
 
 // Tournament phase date ranges (YYYYMMDD strings)
 const TOURNAMENT_PHASES = [
-  { label:'First Four',   start:'20260317', end:'20260318' },
+  { label:'First Four',   start:'20260316', end:'20260318' },
   { label:'1st Round',    start:'20260319', end:'20260322' },
   { label:'2nd Round',    start:'20260323', end:'20260324' },
   { label:'Sweet 16',     start:'20260327', end:'20260328' },
@@ -633,7 +786,7 @@ const TOURNAMENT_PHASES = [
   { label:'Final Four',   start:'20260404', end:'20260404' },
   { label:'Championship', start:'20260406', end:'20260406' },
 ];
-const TOURNEY_START = '20260317';
+const TOURNEY_START = '20260316';
 const TOURNEY_END   = '20260406';
 
 function dateToKey(d) {
@@ -677,7 +830,8 @@ function getSquareWinner(winnerScore, loserScore) {
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let state = {
-  games: [],
+  games: [],        // games for the currently selected date (game cards view)
+  allGames: [],     // games from ALL tournament dates up to today (grid + leaderboard)
   loading: true,
   error: null,
   lastUpdated: null,
@@ -686,7 +840,9 @@ let state = {
 };
 
 // ─── ESPN API ────────────────────────────────────────────────────────────────
-const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?groups=100&limit=200';
+// groups=100 is D-I Men's Basketball; we also try without it for historical dates
+const ESPN_BASE      = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?groups=100&limit=200';
+const ESPN_BASE_HIST = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200';
 
 function detectRound(event, competition) {
   // Try competition notes
@@ -715,99 +871,146 @@ function detectRound(event, competition) {
   return null;
 }
 
-async function fetchGames() {
-  document.getElementById('last-updated').textContent = 'Updating…';
-  state.loading = true;
-  renderGames(); // show spinner immediately
-  try {
-    const url = `${ESPN_BASE}&dates=${state.selectedDate}`;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+// ─── Shared event parser ───────────────────────────────────────────────────
+function parseEvents(data) {
+  const processed = [];
+  for (const event of (data.events || [])) {
+    const competition = event.competitions?.[0];
+    if (!competition) continue;
 
-    const processed = [];
-    for (const event of (data.events || [])) {
-      const competition = event.competitions?.[0];
-      if (!competition) continue;
+    // Only include 2026 NCAA Men's Basketball Tournament games
+    if (event.season?.year !== 2026 || event.season?.type !== 3) continue;
+    const notes = competition.notes || event.notes || [];
+    const noteText = notes.map(n => n.headline || n.text || '').join(' ');
+    // Accept any NCAA tournament note (Championship, First Four, etc.)
+    // or fall through for season-type-3 games with no notes (some past-date responses omit notes)
+    const hasNCAA = noteText.toLowerCase().includes("ncaa");
+    if (noteText.length > 0 && !hasNCAA) continue; // has notes but none are NCAA → skip
 
-      // Only include 2026 NCAA Men's Basketball Tournament games
-      if (event.season?.year !== 2026 || event.season?.type !== 3) continue;
-      const notes = competition.notes || event.notes || [];
-      const noteText = notes.map(n => n.headline || '').join(' ');
-      if (!noteText.includes("NCAA Men's Basketball Championship")) continue;
+    const competitors = competition.competitors || [];
+    const home = competitors.find(c => c.homeAway === 'home') || competitors[0];
+    const away = competitors.find(c => c.homeAway === 'away') || competitors[1];
+    if (!home || !away) continue;
 
-      const competitors = competition.competitors || [];
-      const home = competitors.find(c => c.homeAway === 'home') || competitors[0];
-      const away = competitors.find(c => c.homeAway === 'away') || competitors[1];
-      if (!home || !away) continue;
+    const regionMatch = noteText.match(/(East|West|South|Midwest|Southeast|Mid-West)\s+Region/i);
+    const region = regionMatch ? regionMatch[1] : null;
 
-      // Extract region (e.g. "East Region", "Midwest Region")
-      const regionMatch = noteText.match(/(East|West|South|Midwest|Southeast|Mid-West)\s+Region/i);
-      const region = regionMatch ? regionMatch[1] : null;
+    const roundNum = detectRound(event, competition);
+    const statusType = event.status?.type || {};
+    const isCompleted = statusType.completed === true || statusType.name === 'STATUS_FINAL';
+    const isLive = statusType.state === 'in' || statusType.name === 'STATUS_IN_PROGRESS';
 
-      const roundNum = detectRound(event, competition);
-      const statusType = event.status?.type || {};
-      const isCompleted = statusType.completed === true || statusType.name === 'STATUS_FINAL';
-      const isLive = statusType.state === 'in' || statusType.name === 'STATUS_IN_PROGRESS';
+    const homeScore = parseInt(home.score ?? '0') || 0;
+    const awayScore = parseInt(away.score ?? '0') || 0;
 
-      const homeScore = parseInt(home.score ?? '0') || 0;
-      const awayScore = parseInt(away.score ?? '0') || 0;
-
-      let squareWinner = null;
-      if ((isCompleted || isLive) && (homeScore > 0 || awayScore > 0)) {
-        let winnerScore, loserScore;
-        if (home.winner === true || homeScore > awayScore) {
-          winnerScore = homeScore; loserScore = awayScore;
-        } else if (away.winner === true || awayScore > homeScore) {
-          winnerScore = awayScore; loserScore = homeScore;
-        }
-        if (winnerScore !== undefined) {
-          squareWinner = getSquareWinner(winnerScore, loserScore);
-          if (squareWinner) {
-            squareWinner.prize     = isCompleted && roundNum ? ROUND_PRIZES[roundNum] : null;
-            squareWinner.roundNum  = roundNum;
-            squareWinner.winScore  = winnerScore;
-            squareWinner.loseScore = loserScore;
-          }
+    let squareWinner = null;
+    if ((isCompleted || isLive) && (homeScore > 0 || awayScore > 0)) {
+      let winnerScore, loserScore;
+      if (home.winner === true || homeScore > awayScore) {
+        winnerScore = homeScore; loserScore = awayScore;
+      } else if (away.winner === true || awayScore > homeScore) {
+        winnerScore = awayScore; loserScore = homeScore;
+      }
+      if (winnerScore !== undefined) {
+        squareWinner = getSquareWinner(winnerScore, loserScore);
+        if (squareWinner) {
+          squareWinner.prize     = isCompleted && roundNum != null ? (ROUND_PRIZES[roundNum] ?? null) : null;
+          squareWinner.roundNum  = roundNum;
+          squareWinner.winScore  = winnerScore;
+          squareWinner.loseScore = loserScore;
         }
       }
-
-      processed.push({
-        id: event.id,
-        name: event.name || '',
-        date: event.date,
-        roundNum,
-        region,
-        isCompleted,
-        isLive,
-        home: {
-          name:   home.team?.displayName || home.team?.name || 'TBD',
-          abbr:   home.team?.abbreviation || '',
-          score:  homeScore,
-          seed:   home.seed || home.curatedRank?.current || null,
-          logo:   home.team?.logo || null,
-          winner: home.winner === true || homeScore > awayScore,
-        },
-        away: {
-          name:   away.team?.displayName || away.team?.name || 'TBD',
-          abbr:   away.team?.abbreviation || '',
-          score:  awayScore,
-          seed:   away.seed || away.curatedRank?.current || null,
-          logo:   away.team?.logo || null,
-          winner: away.winner === true || awayScore > homeScore,
-        },
-        squareWinner,
-        statusText: statusType.shortDetail || statusType.detail || 'Scheduled',
-      });
     }
 
-    state.games      = processed;
-    state.error      = null;
+    processed.push({
+      id: event.id,
+      name: event.name || '',
+      date: event.date,
+      roundNum,
+      region,
+      isCompleted,
+      isLive,
+      home: {
+        name:   home.team?.displayName || home.team?.name || 'TBD',
+        abbr:   home.team?.abbreviation || '',
+        score:  homeScore,
+        seed:   home.seed || home.curatedRank?.current || null,
+        logo:   home.team?.logo || null,
+        winner: home.winner === true || homeScore > awayScore,
+      },
+      away: {
+        name:   away.team?.displayName || away.team?.name || 'TBD',
+        abbr:   away.team?.abbreviation || '',
+        score:  awayScore,
+        seed:   away.seed || away.curatedRank?.current || null,
+        logo:   away.team?.logo || null,
+        winner: away.winner === true || awayScore > homeScore,
+      },
+      squareWinner,
+      statusText: statusType.shortDetail || statusType.detail || 'Scheduled',
+    });
+  }
+  return processed;
+}
+
+// ─── All tournament dates (past + future) ─────────────────────────────────
+function getAllTournamentDates() {
+  const dates = new Set();
+  for (const phase of TOURNAMENT_PHASES) {
+    let cur = phase.start;
+    while (cur <= TOURNEY_END) {
+      dates.add(cur);
+      const d = keyToDate(cur);
+      d.setDate(d.getDate() + 1);
+      cur = dateToKey(d);
+      if (cur > phase.end) break;
+    }
+  }
+  return [...dates].sort();
+}
+
+// Single fetch that powers game cards, grid, AND leaderboard
+async function fetchAllGames() {
+  document.getElementById('last-updated').textContent = 'Updating…';
+  state.loading = true;
+  renderGames();
+
+  try {
+    const dates = getAllTournamentDates();
+    const seen  = new Set();
+    const all   = [];
+
+    const today = dateToKey(new Date());
+
+    await Promise.all(dates.map(async date => {
+      // For past dates try both the groups URL and the ungrouped URL — ESPN
+      // sometimes omits completed games from the groups=100 scoreboard.
+      const urls = date <= today
+        ? [`${ESPN_BASE}&dates=${date}`, `${ESPN_BASE_HIST}&dates=${date}`]
+        : [`${ESPN_BASE}&dates=${date}`];
+
+      for (const url of urls) {
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) continue;
+          const data = await resp.json();
+          for (const g of parseEvents(data)) {
+            if (!seen.has(g.id)) { seen.add(g.id); all.push(g); }
+          }
+        } catch { /* skip */ }
+      }
+    }));
+
+    // Chronological order
+    all.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    state.games    = all;   // game cards
+    state.allGames = all;   // grid + leaderboard
+    state.error    = null;
     state.lastUpdated = new Date();
 
-    // Show live badge if any live games
     const liveEl = document.getElementById('live-indicator');
-    liveEl.style.display = processed.some(g => g.isLive) ? '' : 'none';
+    liveEl.style.display = all.some(g => g.isLive) ? '' : 'none';
   } catch (err) {
     state.error = err.message;
   } finally {
@@ -852,7 +1055,7 @@ function renderGames() {
   }
 
   // Build round filter chips
-  const rounds = ['all', ...new Set(state.games.map(g => g.roundNum).filter(Boolean)).values()].sort((a,b) => a === 'all' ? -1 : b === 'all' ? 1 : a - b);
+  const rounds = ['all', ...new Set(state.games.map(g => g.roundNum).filter(r => r != null))].sort((a,b) => a === 'all' ? -1 : b === 'all' ? 1 : a - b);
   filterEl.innerHTML = rounds.map(r => `
     <button class="round-chip ${state.activeRoundFilter === r ? 'active' : ''}"
             onclick="setRoundFilter(${JSON.stringify(r)})">
@@ -863,21 +1066,54 @@ function renderGames() {
     ? state.games
     : state.games.filter(g => g.roundNum === state.activeRoundFilter);
 
-  // Sort: live first, then completed (newest first), then upcoming
-  const sorted = [...filtered].sort((a, b) => {
-    if (a.isLive  && !b.isLive)  return -1;
-    if (!a.isLive && b.isLive)   return 1;
-    if (a.isCompleted && !b.isCompleted) return -1;
-    if (!a.isCompleted && b.isCompleted) return 1;
-    return new Date(b.date) - new Date(a.date);
-  });
-
-  if (sorted.length === 0) {
+  if (filtered.length === 0) {
     container.innerHTML = '<div class="no-games">🏀 No games found for this filter.<br><small>Check back when the tournament begins!</small></div>';
     return;
   }
 
-  container.innerHTML = `<div class="games-grid">${sorted.map(gameCard).join('')}</div>`;
+  // Group games by date (already sorted chronologically from fetch)
+  const byDate = {};
+  for (const g of filtered) {
+    const key = g.date ? g.date.slice(0, 10).replace(/-/g, '') : 'unknown';
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(g);
+  }
+
+  // Within each day: live first, then scheduled by time, then completed
+  for (const key of Object.keys(byDate)) {
+    byDate[key].sort((a, b) => {
+      if (a.isLive  && !b.isLive)  return -1;
+      if (!a.isLive && b.isLive)   return 1;
+      if (a.isCompleted && !b.isCompleted) return 1;
+      if (!a.isCompleted && b.isCompleted) return -1;
+      return new Date(a.date) - new Date(b.date);
+    });
+  }
+
+  const today = dateToKey(new Date());
+  let html = '';
+  for (const dateKey of Object.keys(byDate).sort()) {
+    const phase = phaseForDate(dateKey);
+    const isToday = dateKey === today;
+    const isPast  = dateKey < today;
+    const label   = isToday ? 'Today' : fmtDateDisplay(dateKey);
+    const sub     = phase ? ` · ${phase.label}` : '';
+    html += `
+      <div class="date-section" id="date-${dateKey}">
+        <div class="date-section-header ${isPast ? 'past' : isToday ? 'today' : 'future'}">
+          <span class="date-section-label">${label}${sub}</span>
+          ${isPast ? '<span class="date-section-tag">Final</span>' : isToday ? '<span class="date-section-tag today-tag">Today</span>' : ''}
+        </div>
+        <div class="games-grid">${byDate[dateKey].map(gameCard).join('')}</div>
+      </div>`;
+  }
+  container.innerHTML = html;
+
+  // Auto-scroll to today's section (or nearest future date) on initial load
+  const todayEl = document.getElementById(`date-${today}`);
+  if (todayEl) {
+    setTimeout(() => todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
 }
 
 function gameCard(game) {
@@ -942,19 +1178,45 @@ function gameCard(game) {
 function renderGrid() {
   const container = document.getElementById('grid-container');
 
-  // Build cell win counts and tooltip data
-  const cellData = Array.from({length:10}, () => Array(10).fill(null).map(() => ({ wins:0, games:[] })));
-  for (const game of state.games) {
-    if (game.squareWinner && game.isCompleted) {
-      const { rowIndex, colIndex, winScore, loseScore, prize } = game.squareWinner;
-      cellData[rowIndex][colIndex].wins++;
-      cellData[rowIndex][colIndex].games.push({
-        name: game.name,
-        score: `${game.away.abbr || game.away.name} ${game.away.score} – ${game.home.score} ${game.home.abbr || game.home.name}`,
-        round: game.roundNum ? ROUND_NAMES[game.roundNum] : '',
+  // Build per-cell data from ALL tournament games
+  const cellData = Array.from({length:10}, () =>
+    Array(10).fill(null).map(() => ({ wins:0, liveNow:false, entries:[] }))
+  );
+
+  for (const game of state.allGames) {
+    if (!game.squareWinner) continue;
+    const { rowIndex, colIndex, prize } = game.squareWinner;
+    const cd = cellData[rowIndex][colIndex];
+
+    const awayLabel = game.away.abbr || game.away.name;
+    const homeLabel = game.home.abbr || game.home.name;
+    const roundName = game.roundNum != null ? ROUND_NAMES[game.roundNum] : '';
+    const dateLabel = game.date
+      ? new Date(game.date).toLocaleDateString('en-US', { month:'short', day:'numeric' })
+      : '';
+
+    if (game.isCompleted) {
+      cd.wins++;
+      const scoreStr = `${awayLabel} ${game.away.score} – ${game.home.score} ${homeLabel}`;
+      cd.entries.push({
+        status: 'final',
+        round:  roundName,
+        date:   dateLabel,
+        score:  scoreStr,
         prize,
       });
+    } else if (game.isLive) {
+      cd.liveNow = true;
+      const scoreStr = `${awayLabel} ${game.away.score} – ${game.home.score} ${homeLabel} (LIVE)`;
+      cd.entries.push({
+        status: 'live',
+        round:  roundName,
+        date:   dateLabel,
+        score:  scoreStr,
+        prize:  null,  // not awarded until final
+      });
     }
+    // Scheduled future games: squareWinner is null (no scores yet) — nothing to show
   }
 
   let html = `
@@ -970,36 +1232,58 @@ function renderGrid() {
           <th class="grid-corner" rowspan="2" colspan="2"></th>
           <th colspan="10" style="font-size:0.85rem;padding:10px;">🏆 Winning Team (Last Digit)</th>
         </tr>
-        <tr>
-          ${WINNING_DIGITS.map(d => `<th>${d}</th>`).join('')}
-        </tr>
+        <tr>${WINNING_DIGITS.map(d => `<th>${d}</th>`).join('')}</tr>
       </thead>
       <tbody>`;
 
   for (let r = 0; r < 10; r++) {
     html += '<tr>';
-    if (r === 0) {
-      html += `<th class="grid-axis-header" rowspan="10">❌ Losing Team (Last Digit)</th>`;
-    }
+    if (r === 0) html += `<th class="grid-axis-header" rowspan="10">❌ Losing Team (Last Digit)</th>`;
     html += `<th class="grid-row-digit">${LOSING_DIGITS[r]}</th>`;
+
     for (let c = 0; c < 10; c++) {
-      const name  = GRID[r][c];
-      const cd    = cellData[r][c];
-      const wins  = cd.wins;
-      const wClass = wins === 0 ? '' : wins === 1 ? 'won-1' : wins <= 3 ? `won-${Math.min(wins+1,4)}` : 'won-5';
-      const total = cd.games.reduce((s,g) => s + (g.prize||0), 0);
-      const tipGames = cd.games.map(g =>
-        `<div class="tooltip-game">• ${g.round} — ${g.score}${g.prize ? ` (+$${g.prize})`:''}</div>`
-      ).join('');
-      const tip = wins > 0
-        ? `<div class="cell-tooltip"><div class="tooltip-title">${name}</div>${tipGames}<div style="margin-top:4px;color:#c8a21a;font-weight:700">Total: $${total}</div></div>`
+      const name = GRID[r][c];
+      const cd   = cellData[r][c];
+      const wins = cd.wins;
+      const total = cd.entries.reduce((s, e) => s + (e.prize || 0), 0);
+
+      const wClass = cd.liveNow
+        ? 'live-cell'
+        : wins === 0 ? ''
+        : wins === 1 ? 'won-1'
+        : wins <= 3  ? `won-${Math.min(wins + 1, 4)}`
+        : 'won-5';
+
+      // Cell label: show $ earned, or LIVE indicator
+      let cellLabel = '';
+      if (wins > 0 && total > 0) cellLabel = `<div class="cell-wins">$${total}</div>`;
+      if (cd.liveNow)            cellLabel += `<div class="cell-live-dot">● LIVE</div>`;
+
+      // Tooltip entries
+      const tipRows = cd.entries.map(e => {
+        const prizeStr = e.prize  ? `<span class="tip-prize">+$${e.prize}</span>`
+                       : e.status === 'live' ? `<span class="tip-live">LIVE</span>`
+                       : '';
+        return `
+          <div class="tooltip-game">
+            <div class="tip-meta">${e.date}${e.round ? ' · ' + e.round : ''}</div>
+            <div class="tip-score">${e.score} ${prizeStr}</div>
+          </div>`;
+      }).join('');
+
+      const tip = cd.entries.length > 0
+        ? `<div class="cell-tooltip">
+             <div class="tooltip-title">${name}</div>
+             ${tipRows}
+             ${total > 0 ? `<div class="tip-total">Total earned: $${total}</div>` : ''}
+           </div>`
         : '';
-      const winsLabel = wins > 0 ? `<div class="cell-wins">$${total}</div>` : '';
+
       html += `
         <td class="grid-cell ${wClass}">
           <div class="cell-inner">
             <div class="cell-name">${name}</div>
-            ${winsLabel}
+            ${cellLabel}
           </div>
           ${tip}
         </td>`;
@@ -1008,22 +1292,95 @@ function renderGrid() {
   }
 
   html += '</tbody></table></div>';
+
+  // ── Game Results Panel ────────────────────────────────────────────────────
+  // Collect all completed + live games that have a squareWinner
+  const resultGames = state.allGames.filter(g =>
+    (g.isCompleted || g.isLive) && g.squareWinner
+  ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  html += `<div class="results-panel"><div class="results-panel-title">📋 Game Results — Square Winners</div>`;
+
+  if (resultGames.length === 0) {
+    html += `<div class="results-empty">No completed games yet — check back soon!</div>`;
+  } else {
+    // Group by date label
+    const dayGroups = {};
+    for (const g of resultGames) {
+      const dayKey = g.date
+        ? new Date(g.date).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
+        : 'Unknown Date';
+      if (!dayGroups[dayKey]) dayGroups[dayKey] = [];
+      dayGroups[dayKey].push(g);
+    }
+
+    for (const [day, games] of Object.entries(dayGroups)) {
+      html += `<div class="results-day-group"><div class="results-day-header">${day}</div>`;
+      for (const g of games) {
+        const roundName  = g.roundNum != null ? ROUND_NAMES[g.roundNum] : '';
+        const { name: sqName, winScore, loseScore, prize } = g.squareWinner;
+
+        // Figure out winner/loser display names
+        const homeWon = g.home.score >= g.away.score;
+        const winTeam  = homeWon ? g.home.name : g.away.name;
+        const loseTeam = homeWon ? g.away.name : g.home.name;
+
+        if (g.isCompleted) {
+          const badgeHtml  = roundName
+            ? `<span class="result-round-badge">${roundName}</span>` : '';
+          const prizeHtml  = prize
+            ? `<span class="result-prize">+$${prize}</span>` : '';
+          html += `
+            <div class="result-row">
+              ${badgeHtml}
+              <div class="result-score">
+                <span class="winner-name">${winTeam}</span>
+                <span style="color:var(--text-muted)"> ${winScore} – ${loseScore} </span>
+                <span class="loser-name">${loseTeam}</span>
+              </div>
+              <span class="result-arrow">→</span>
+              <div class="result-winner-chip">${sqName}${prizeHtml}</div>
+            </div>`;
+        } else {
+          // Live game — show current leader
+          const leadTeam  = homeWon ? g.home.name : g.away.name;
+          const trailTeam = homeWon ? g.away.name : g.home.name;
+          const prizeLbl  = prize ? `+$${prize}` : '';
+          html += `
+            <div class="result-row result-live">
+              <span class="result-live-badge">● LIVE</span>
+              <div class="result-score">
+                <span class="winner-name">${leadTeam}</span>
+                <span style="color:var(--text-muted)"> ${g.squareWinner.winScore} – ${g.squareWinner.loseScore} </span>
+                <span class="loser-name">${trailTeam}</span>
+              </div>
+              <span class="result-arrow">→</span>
+              <div class="result-winner-chip live-chip">${sqName} leading${prizeLbl ? ' · ' + prizeLbl : ''}</div>
+            </div>`;
+        }
+      }
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>`;
+
   container.innerHTML = html;
 }
 
 function renderLeaderboard() {
   const container = document.getElementById('leaderboard-container');
 
-  // Tally winnings
+  // Tally winnings from ALL tournament games (not just today)
   const winnings = {};
   const breakdown = {};
-  for (const game of state.games) {
+  for (const game of state.allGames) {
     if (game.isCompleted && game.squareWinner?.prize) {
       const name = game.squareWinner.name;
       winnings[name] = (winnings[name] || 0) + game.squareWinner.prize;
       if (!breakdown[name]) breakdown[name] = {};
       const r = game.roundNum;
-      if (r) breakdown[name][r] = (breakdown[name][r] || 0) + game.squareWinner.prize;
+      if (r != null) breakdown[name][r] = (breakdown[name][r] || 0) + game.squareWinner.prize;
     }
   }
 
@@ -1031,9 +1388,9 @@ function renderLeaderboard() {
     .map(([name, total]) => ({ name, total, bd: breakdown[name] || {} }))
     .sort((a, b) => b.total - a.total);
 
-  const totalGames   = state.games.filter(g => g.isCompleted).length;
+  const totalGames   = state.allGames.filter(g => g.isCompleted).length;
   const totalPaid    = rows.reduce((s, r) => s + r.total, 0);
-  const livePool     = state.games.filter(g => g.isLive).length;
+  const livePool     = state.allGames.filter(g => g.isLive).length;
 
   let html = `
     <div class="leaderboard-wrap">
@@ -1056,7 +1413,7 @@ function renderLeaderboard() {
         .join(' · ');
       const wins = Object.values(row.bd).reduce((s,v) => s + (v / (ROUND_PRIZES[Object.keys(row.bd).find(k=>row.bd[k]===v)] || 1)|0), 0);
       // Count actual wins
-      const wcount = state.games.filter(g => g.isCompleted && g.squareWinner?.name === row.name).length;
+      const wcount = state.allGames.filter(g => g.isCompleted && g.squareWinner?.name === row.name).length;
       html += `
         <div class="lb-row ${rankClass}">
           <div class="lb-rank">${medal}</div>
@@ -1124,10 +1481,11 @@ function renderDateNav() {
 }
 
 function setDate(key) {
-  if (key === state.selectedDate) return;
   state.selectedDate = key;
-  state.activeRoundFilter = 'all';
-  fetchGames();
+  renderDateNav();
+  // Scroll to that date's section if it exists
+  const el = document.getElementById(`date-${key}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function jumpToPhase(startKey) {
@@ -1171,20 +1529,20 @@ function startCountdown() {
 function scheduleAutoRefresh() {
   clearTimeout(autoRefreshTimer);
   autoRefreshTimer = setTimeout(() => {
-    fetchGames();
+    fetchAllGames();
     startCountdown();
     scheduleAutoRefresh();
   }, AUTO_REFRESH_MS);
 }
 
 function manualRefresh() {
-  fetchGames();
+  fetchAllGames();
   startCountdown();
   scheduleAutoRefresh();
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
-fetchGames();
+fetchAllGames();
 startCountdown();
 scheduleAutoRefresh();
 </script>
