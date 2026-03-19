@@ -103,6 +103,24 @@
       transition: background 0.2s;
     }
     .refresh-btn:hover { background: rgba(255,255,255,0.25); }
+    .board-selector {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 24px;
+    }
+    .board-selector:hover { background-color: rgba(255,255,255,0.25); }
+    .board-selector option { background: var(--bg-card); color: var(--text); }
 
     /* NAV TABS */
     nav {
@@ -726,6 +744,10 @@
       <span class="live-badge" id="live-indicator" style="display:none">● Live</span>
       <span class="last-updated" id="last-updated"></span>
       <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh <span id="refresh-countdown"></span></button>
+      <select class="board-selector" id="board-selector" onchange="switchBoard(this.value)">
+        <option value="0">Board 1</option>
+        <option value="1">Board 2</option>
+      </select>
     </div>
   </header>
 
@@ -757,35 +779,51 @@
 
 <script>
 // ─── POOL DATA ────────────────────────────────────────────────────────────────
-// Columns = last digit of WINNING team score
-const WINNING_DIGITS = [5, 0, 8, 2, 7, 3, 9, 1, 6, 4];
-// Rows = last digit of LOSING team score
-const LOSING_DIGITS  = [1, 6, 4, 9, 0, 8, 2, 7, 5, 3];
-
-// GRID[rowIndex][colIndex] = participant name
-// Row order matches LOSING_DIGITS, Col order matches WINNING_DIGITS
-const GRID = [
-  // row: losing digit = 1
-  ['Jess Murphy','Mandy Jakovich','Kelly Weatherwax','Rick Bednar','Delaney Slyder','Chad Holbert','Mark Slyder','Marilou Franczkowski','Mandy Jakovich','Mark Hoisington'],
-  // row: losing digit = 6
-  ['Mark Slyder','Talyer Bednar','Phil Bednar','Andy Decker','Jess Murphy','Brian Gibb','Sarah Filkorn','Ella Boario','Ted Jakovich','Mark Lupo'],
-  // row: losing digit = 4
-  ['Ken Pulvermacher','Mark Lupo','Mark Hoisington','Mandy Jakovich','Donna Slyder','Nathan Lewis','Hadley Slyder','Mandy Jakovich','Jess Murphy','Lucy Lawrence'],
-  // row: losing digit = 9
-  ['Andy Decker','Doug Smith','Mandy Jakovich','Beth Fuchs','Ted Jakovich','Lisa Crum','Eric Fultz','Bryce Bednar','Lucy Lawrence','Brian Gibb'],
-  // row: losing digit = 0
-  ['Bill Sigfred','Marilou Franczkowski','Randy Wharton','Paula Filkorn','Stephanie Laird','Ted Jakovich','Andy Decker','Grant Slyder','Mark Lupo','Kimberly Mirman'],
-  // row: losing digit = 8
-  ['Mark Lupo','Tina Bednar','Kimberly Mirman','Mark Hoisington','Eric Fultz','Ken Pulvermacher','Lucy Lawrence','Chad Holbert','Brian Gibb','Katie Bednar'],
-  // row: losing digit = 2
-  ['Mark Hoisington','Chad Holbert','Nathan Lewis','Ted Jakovich','Mandy Jakovich','Eric Fultz','Ted Jakovich','Mark Lupo','Bryce Bednar','Mark Slyder'],
-  // row: losing digit = 7
-  ['Mandy Jakovich','Donna Slyder','Emerson Slyder','Greg Biddulph','Billy Lewis','Kevin Franczkowski','Taylor Bednar','Angelo Lacona','Donna Slyder','Mandy Jakovich'],
-  // row: losing digit = 5
-  ['Lisa Crum','Sam Bacon','Brian Gibb','Chris Lacona','Nathan Horrigan','Drew Hoisington','Mandy Jakovich','Lucy Lawrence','Butch Filkorn','Donna Slyder'],
-  // row: losing digit = 3
-  ['Mike Piazza','Stephanie Laird','Mandy Jakovich','Lucy Lawrence','Mark Slyder','Rick Bednar','Eric Jones','Tina Bednar','Brad Daugherty','Mark Hoisington'],
+// Board definitions: each board has its own digit axes and grid
+const BOARDS = [
+  {
+    name: 'Board 1',
+    winningDigits: [5, 0, 8, 2, 7, 3, 9, 1, 6, 4],
+    losingDigits:  [1, 6, 4, 9, 0, 8, 2, 7, 5, 3],
+    grid: [
+      ['Jess Murphy','Mandy Jakovich','Kelly Weatherwax','Rick Bednar','Delaney Slyder','Chad Holbert','Mark Slyder','Marilou Franczkowski','Mandy Jakovich','Mark Hoisington'],
+      ['Mark Slyder','Talyer Bednar','Phil Bednar','Andy Decker','Jess Murphy','Brian Gibb','Sarah Filkorn','Ella Boario','Ted Jakovich','Mark Lupo'],
+      ['Ken Pulvermacher','Mark Lupo','Mark Hoisington','Mandy Jakovich','Donna Slyder','Nathan Lewis','Hadley Slyder','Mandy Jakovich','Jess Murphy','Lucy Lawrence'],
+      ['Andy Decker','Doug Smith','Mandy Jakovich','Beth Fuchs','Ted Jakovich','Lisa Crum','Eric Fultz','Bryce Bednar','Lucy Lawrence','Brian Gibb'],
+      ['Bill Sigfred','Marilou Franczkowski','Randy Wharton','Paula Filkorn','Stephanie Laird','Ted Jakovich','Andy Decker','Grant Slyder','Mark Lupo','Kimberly Mirman'],
+      ['Mark Lupo','Tina Bednar','Kimberly Mirman','Mark Hoisington','Eric Fultz','Ken Pulvermacher','Lucy Lawrence','Chad Holbert','Brian Gibb','Katie Bednar'],
+      ['Mark Hoisington','Chad Holbert','Nathan Lewis','Ted Jakovich','Mandy Jakovich','Eric Fultz','Ted Jakovich','Mark Lupo','Bryce Bednar','Mark Slyder'],
+      ['Mandy Jakovich','Donna Slyder','Emerson Slyder','Greg Biddulph','Billy Lewis','Kevin Franczkowski','Taylor Bednar','Angelo Lacona','Donna Slyder','Mandy Jakovich'],
+      ['Lisa Crum','Sam Bacon','Brian Gibb','Chris Lacona','Nathan Horrigan','Drew Hoisington','Mandy Jakovich','Lucy Lawrence','Butch Filkorn','Donna Slyder'],
+      ['Mike Piazza','Stephanie Laird','Mandy Jakovich','Lucy Lawrence','Mark Slyder','Rick Bednar','Eric Jones','Tina Bednar','Brad Daugherty','Mark Hoisington'],
+    ]
+  },
+  {
+    name: 'Board 2',
+    winningDigits: [3, 7, 0, 6, 2, 9, 5, 1, 8, 4],
+    losingDigits:  [8, 4, 1, 9, 6, 2, 7, 0, 3, 5],
+    grid: [
+      ['Ed Spiker','Doug Knutson','Brett Stalnaker','Joe Hance','Dan Brown','Nick Vasko','Andrew Huber','Dan Brown','April Gardner','Ryan Knight'],
+      ['Linda Kuntz','Phil Bednar','Jason Box','Doug Knutson','Jen Schroeder','Brandon Fast','Scott George','Doug Spiker','Sandy Efaw','Matt Swinehart'],
+      ['Nick Vasko','James Toland','Doug Spiker','April Gardner','Don Pederson','Ann Follansbee','Kyle Pelfrey','Bob Keaton','Casey Stang','Dan Brown'],
+      ['Steve Grater','Thomas Bright','Andrew Huber','Frank Laib','Jimmy Baumer','Brett Stalnaker','Hugh McMichael','Ross Fishbain','Ken Smith','Ed Spiker'],
+      ['Ann Follansbee','Bo Hance','Rudy Spiker','Hugh McMichael','Lee Yoder','Austin Parman','Nick Vasko','James Toland','Jon Johnson','Adam Cordea'],
+      ['Doug Spiker','Andrew Huber','Linda Kuntz','Scott George','Chuck Hance','Doug Knutson','Brett Carpenter','Jen Schroeder','Dan Brown','Hugh McMichael'],
+      ['Josh Hill','Sandy Efaw','Casey Stang','Matt Swinehart','Nick Vasko','Francois Alaire','Phil Bednar','Rudy Spiker','Nick Vasko','Phil Bednar'],
+      ['April Gardner','Jimmy Baumer','Nick Vasko','Jon Johnson','Dan Brown','Chad Pochubay','Sasha Gottschalk','Nick Vasko','Justin Princehorn','Andrew Huber'],
+      ['Reid Parman','Jason Fritz','Nick Vasko','Ed Spiker','Nick Vasko','April Gardner','Herb Parman','Chuck Hance','Crew Hance','Eric Downing'],
+      ['John DiMattio','Rudy Spiker','Herb Parman','Bob Keaton','Adam Grua','Rudy Spiker','Nick McGill','Matt Hensch','Frank Laib','Nick Vasko'],
+    ]
+  }
 ];
+
+// Active board index
+let activeBoardIndex = 0;
+
+// Convenience accessors for active board
+function activeWinningDigits() { return BOARDS[activeBoardIndex].winningDigits; }
+function activeLosingDigits()  { return BOARDS[activeBoardIndex].losingDigits; }
+function activeGrid()          { return BOARDS[activeBoardIndex].grid; }
 
 const ROUND_PRIZES = { 0:10, 1:10, 2:15, 3:30, 4:50, 5:105, 6:250 };
 const ROUND_NAMES       = { 0:'First Four', 1:'1st Round', 2:'2nd Round', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
@@ -837,10 +875,10 @@ const PHASE_ROUND_MAP = {
 function getSquareWinner(winnerScore, loserScore) {
   const winDigit  = winnerScore % 10;
   const loseDigit = loserScore  % 10;
-  const colIndex  = WINNING_DIGITS.indexOf(winDigit);
-  const rowIndex  = LOSING_DIGITS.indexOf(loseDigit);
+  const colIndex  = activeWinningDigits().indexOf(winDigit);
+  const rowIndex  = activeLosingDigits().indexOf(loseDigit);
   if (colIndex === -1 || rowIndex === -1) return null;
-  return { name: GRID[rowIndex][colIndex], rowIndex, colIndex, winDigit, loseDigit };
+  return { name: activeGrid()[rowIndex][colIndex], rowIndex, colIndex, winDigit, loseDigit };
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -918,7 +956,8 @@ function parseEvents(data) {
     const homeScore = parseInt(home.score ?? '0') || 0;
     const awayScore = parseInt(away.score ?? '0') || 0;
 
-    let squareWinner = null;
+    // Compute square winner for each board
+    const squareWinners = BOARDS.map(() => null);
     if ((isCompleted || isLive) && (homeScore > 0 || awayScore > 0)) {
       let winnerScore, loserScore;
       if (home.winner === true || homeScore > awayScore) {
@@ -927,12 +966,22 @@ function parseEvents(data) {
         winnerScore = awayScore; loserScore = homeScore;
       }
       if (winnerScore !== undefined) {
-        squareWinner = getSquareWinner(winnerScore, loserScore);
-        if (squareWinner) {
-          squareWinner.prize     = isCompleted && roundNum != null ? (ROUND_PRIZES[roundNum] ?? null) : null;
-          squareWinner.roundNum  = roundNum;
-          squareWinner.winScore  = winnerScore;
-          squareWinner.loseScore = loserScore;
+        for (let bi = 0; bi < BOARDS.length; bi++) {
+          const b = BOARDS[bi];
+          const winDigit  = winnerScore % 10;
+          const loseDigit = loserScore  % 10;
+          const colIndex  = b.winningDigits.indexOf(winDigit);
+          const rowIndex  = b.losingDigits.indexOf(loseDigit);
+          if (colIndex !== -1 && rowIndex !== -1) {
+            squareWinners[bi] = {
+              name: b.grid[rowIndex][colIndex],
+              rowIndex, colIndex, winDigit, loseDigit,
+              prize:     isCompleted && roundNum != null ? (ROUND_PRIZES[roundNum] ?? null) : null,
+              roundNum,
+              winScore:  winnerScore,
+              loseScore: loserScore,
+            };
+          }
         }
       }
     }
@@ -961,7 +1010,8 @@ function parseEvents(data) {
         logo:   away.team?.logo || null,
         winner: away.winner === true || awayScore > homeScore,
       },
-      squareWinner,
+      squareWinners,
+      get squareWinner() { return this.squareWinners[activeBoardIndex]; },
       statusText: statusType.shortDetail || statusType.detail || 'Scheduled',
     });
   }
@@ -1247,17 +1297,17 @@ function renderGrid() {
           <th class="grid-corner" rowspan="2" colspan="2"></th>
           <th colspan="10" style="font-size:0.85rem;padding:10px;">🏆 Winning Team (Last Digit)</th>
         </tr>
-        <tr>${WINNING_DIGITS.map(d => `<th>${d}</th>`).join('')}</tr>
+        <tr>${activeWinningDigits().map(d => `<th>${d}</th>`).join('')}</tr>
       </thead>
       <tbody>`;
 
   for (let r = 0; r < 10; r++) {
     html += '<tr>';
     if (r === 0) html += `<th class="grid-axis-header" rowspan="10">❌ Losing Team (Last Digit)</th>`;
-    html += `<th class="grid-row-digit">${LOSING_DIGITS[r]}</th>`;
+    html += `<th class="grid-row-digit">${activeLosingDigits()[r]}</th>`;
 
     for (let c = 0; c < 10; c++) {
-      const name = GRID[r][c];
+      const name = activeGrid()[r][c];
       const cd   = cellData[r][c];
       const wins = cd.wins;
       const total = cd.entries.reduce((s, e) => s + (e.prize || 0), 0);
@@ -1508,6 +1558,12 @@ function jumpToPhase(startKey) {
 }
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
+function switchBoard(boardIdx) {
+  activeBoardIndex = parseInt(boardIdx);
+  render();
+  window.scrollTo(0, 0);
+}
+
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
