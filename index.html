@@ -769,6 +769,78 @@
       font-size: 0.88rem;
     }
 
+    /* PAYOUTS */
+    .payouts-wrap { max-width: 700px; }
+    .payouts-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+    .payouts-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px; }
+    .payouts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .payout-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: transform 0.15s;
+    }
+    .payout-card:hover { transform: translateY(-2px); }
+    .payout-card.payout-champ {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, var(--bg-card), rgba(200,162,26,0.12));
+      grid-column: 1 / -1;
+    }
+    .payout-round { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .payout-amount { font-size: 1.8rem; font-weight: 900; color: var(--win); }
+    .payout-champ .payout-amount { font-size: 2.4rem; color: var(--gold-light); }
+    .payout-detail { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+    .payouts-total {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;
+      font-size: 0.95rem; font-weight: 700;
+    }
+    .payouts-total-amount { font-size: 1.3rem; font-weight: 900; color: var(--gold-light); }
+    .payouts-note {
+      background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15);
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;
+    }
+    .payouts-note strong { color: var(--text); }
+    .payout-card { cursor: pointer; position: relative; }
+    .payout-card .payout-expand { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; }
+    .payout-card.active { border-color: var(--gold); background: linear-gradient(135deg, var(--bg-card), rgba(200,162,26,0.08)); }
+    .payout-card.payout-champ.active { border-color: var(--gold-light); }
+    .payout-winners {
+      grid-column: 1 / -1;
+      background: var(--bg-card);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 16px;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .payout-winners-title {
+      font-size: 0.85rem; font-weight: 800; color: var(--gold-light);
+      margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .payout-winners-close { cursor: pointer; font-size: 1.1rem; color: var(--text-muted); background: none; border: none; padding: 2px 6px; }
+    .payout-winners-close:hover { color: var(--text); }
+    .payout-winner-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; margin: 4px 0;
+      background: rgba(0,0,0,0.2); border-radius: 8px;
+      font-size: 0.8rem; border-left: 3px solid var(--win);
+    }
+    .payout-winner-row .pw-name { flex: 1; font-weight: 700; color: var(--text); }
+    .payout-winner-row .pw-matchup { flex: 2; color: var(--text-muted); }
+    .payout-winner-row .pw-score { color: var(--text-muted); font-weight: 600; min-width: 55px; text-align: center; }
+    .payout-winner-row .pw-prize { font-weight: 800; color: var(--win); min-width: 40px; text-align: right; }
+    .payout-no-winners { font-size: 0.8rem; color: var(--text-muted); padding: 8px 0; text-align: center; }
+
     /* Responsive */
     @media (max-width: 600px) {
       header { padding: 12px 16px; }
@@ -805,6 +877,7 @@
     <button class="tab-btn active" onclick="switchTab('games', this)">🏀 Live Games</button>
     <button class="tab-btn" onclick="switchTab('grid', this)">📊 Pool Grid</button>
     <button class="tab-btn" onclick="switchTab('leaderboard', this)">🏆 Leaderboard</button>
+    <button class="tab-btn" onclick="switchTab('payouts', this)">💰 Payouts</button>
   </nav>
 
   <div id="sticky-subheader" class="sticky-subheader">
@@ -822,6 +895,9 @@
     </div>
     <div id="tab-leaderboard" class="tab-content">
       <div id="leaderboard-container"></div>
+    </div>
+    <div id="tab-payouts" class="tab-content">
+      <div id="payouts-container"></div>
     </div>
   </main>
 </div>
@@ -1142,6 +1218,7 @@ function render() {
   renderGames();
   renderGrid();
   renderLeaderboard();
+  renderPayouts();
 }
 
 // Highlight score with last digit boxed
@@ -1579,6 +1656,90 @@ function renderLeaderboard() {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ─── PAYOUTS ─────────────────────────────────────────────────────────────────
+let activePayoutRound = null;
+
+function renderPayouts() {
+  const container = document.getElementById('payouts-container');
+  if (!container) return;
+
+  const PAYOUT_ROUNDS = [
+    { round: 0, name: 'First Four', prize: 10, detail: 'per game', games: 4 },
+    { round: 1, name: '1st Round',  prize: 10, detail: 'per game', games: 32 },
+    { round: 2, name: '2nd Round',  prize: 15, detail: 'per game', games: 16 },
+    { round: 3, name: 'Sweet 16',   prize: 30, detail: 'per game', games: 8 },
+    { round: 4, name: 'Elite 8',    prize: 50, detail: 'per game', games: 4 },
+    { round: 5, name: 'Final Four', prize: 105, detail: 'per game', games: 2 },
+    { round: 6, name: 'Championship', prize: 250, detail: 'grand prize', games: 1 },
+  ];
+
+  let html = `
+    <div class="payouts-wrap">
+      <h2 class="payouts-title">💰 Payout Structure</h2>
+      <p class="payouts-subtitle">Winnings per round based on the last digit of each team's score at the end of each game. Click a round to see winners.</p>
+      <div class="payouts-grid">`;
+
+  for (const pr of PAYOUT_ROUNDS) {
+    const isChamp = pr.round === 6;
+    const isActive = activePayoutRound === pr.round;
+    // Count winners for this round
+    const roundWins = state.allGames.filter(g => g.isCompleted && g.roundNum === pr.round && g.squareWinner);
+    const winnerCount = roundWins.length;
+
+    html += `
+      <div class="payout-card ${isChamp ? 'payout-champ' : ''} ${isActive ? 'active' : ''}"
+           onclick="togglePayoutRound(${pr.round})">
+        <div class="payout-round">${pr.name}</div>
+        <div class="payout-amount">$${pr.prize}</div>
+        <div class="payout-detail">${pr.detail}</div>
+        <div class="payout-expand">${winnerCount > 0 ? `${winnerCount} winner${winnerCount !== 1 ? 's' : ''} — tap to view` : 'No winners yet'}</div>
+      </div>`;
+
+    // Insert expanded winners panel right after the active card
+    if (isActive) {
+      html += `<div class="payout-winners">
+        <div class="payout-winners-title">
+          <span>${pr.name} Winners ($${pr.prize} each)</span>
+          <button class="payout-winners-close" onclick="event.stopPropagation(); togglePayoutRound(null)">✕</button>
+        </div>`;
+
+      if (roundWins.length === 0) {
+        html += `<div class="payout-no-winners">No completed games in this round yet.</div>`;
+      } else {
+        roundWins.forEach(g => {
+          const sw = g.squareWinner;
+          const matchup = g.name || `${g.away.name} vs ${g.home.name}`;
+          html += `
+            <div class="payout-winner-row">
+              <div class="pw-name">${sw.name}</div>
+              <div class="pw-matchup">${matchup}</div>
+              <div class="pw-score">${sw.winScore} – ${sw.loseScore}</div>
+              <div class="pw-prize">$${sw.prize || 0}</div>
+            </div>`;
+        });
+      }
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>
+      <div class="payouts-total">
+        <span>Total Prize Pool</span>
+        <span class="payouts-total-amount">$1,500</span>
+      </div>
+      <div class="payouts-note">
+        <strong>How it works:</strong> At the end of each game, the last digit of the winning team's score and the last digit of the losing team's score determine the winning square on the grid. The person in that square wins the payout for that round.
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+function togglePayoutRound(round) {
+  activePayoutRound = activePayoutRound === round ? null : round;
+  renderPayouts();
 }
 
 // ─── LEADERBOARD DETAIL TOGGLE ───────────────────────────────────────────────
