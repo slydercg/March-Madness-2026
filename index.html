@@ -276,7 +276,7 @@
     .round-chip.active { background: var(--green); border-color: var(--green-light); color: white; }
 
     /* GAME CARDS */
-    .date-section { margin-bottom: 28px; }
+    .date-section { margin-bottom: 28px; scroll-margin-top: 345px; }
     .date-section-header {
       display: flex;
       align-items: center;
@@ -305,6 +305,10 @@
       letter-spacing: 0.06em;
     }
     .date-section-tag.today-tag { background: var(--accent); color: #000; }
+    .date-section-stats { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+    .round-stat { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+    .round-stat.live-stat { color: var(--live); }
+    .date-section-header { display: flex; align-items: center; gap: 8px; }
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -855,6 +859,8 @@
 <body>
 
 <div id="app">
+
+  <div class="sticky-top-wrapper">
   <header>
     <div class="header-title">
       <div>
@@ -866,14 +872,9 @@
       <span class="live-badge" id="live-indicator" style="display:none">● Live</span>
       <span class="last-updated" id="last-updated"></span>
       <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh <span id="refresh-countdown"></span></button>
-      <select class="board-selector" id="board-selector" onchange="switchBoard(this.value)">
-        <option value="0">Board 1</option>
-        <option value="1">Board 2</option>
-      </select>
+      <select class="board-selector" id="board-selector" onchange="switchBoard(this.value)"></select>
     </div>
   </header>
-
-  <div class="sticky-top-wrapper">
   <nav>
     <button class="tab-btn active" onclick="switchTab('games', this)">🏀 Live Games</button>
     <button class="tab-btn" onclick="switchTab('grid', this)">📊 Pool Grid</button>
@@ -883,7 +884,6 @@
 
   <div id="sticky-subheader" class="sticky-subheader">
     <div id="date-nav"></div>
-    <div class="round-filter" id="round-filter"></div>
   </div>
   </div><!-- end sticky-top-wrapper -->
 
@@ -1233,76 +1233,84 @@ function fmtScore(score, isActive) {
 function renderGames() {
   renderDateNav();
   const container = document.getElementById('games-container');
-  const filterEl  = document.getElementById('round-filter');
 
   if (state.loading) {
     container.innerHTML = '<div class="loader"><div class="spinner"></div> Loading games…</div>';
-    filterEl.innerHTML  = '';
     return;
   }
   if (state.error) {
     container.innerHTML = `<div class="error-msg">⚠ Could not load games: ${state.error}.<br>The ESPN API may be unavailable or the tournament hasn't started yet.</div><div class="no-games">No game data available. Check back when the tournament begins.</div>`;
-    filterEl.innerHTML  = '';
     return;
   }
 
-  // Build round filter chips
-  const rounds = ['all', ...new Set(state.games.map(g => g.roundNum).filter(r => r != null))].sort((a,b) => a === 'all' ? -1 : b === 'all' ? 1 : a - b);
-  filterEl.innerHTML = rounds.map(r => `
-    <button class="round-chip ${state.activeRoundFilter === r ? 'active' : ''}"
-            onclick="setRoundFilter(${JSON.stringify(r)})">
-      ${r === 'all' ? 'All Rounds' : ROUND_NAMES[r] || `Round ${r}`}
-    </button>`).join('');
-
-  const filtered = state.activeRoundFilter === 'all'
-    ? state.games
-    : state.games.filter(g => g.roundNum === state.activeRoundFilter);
-
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="no-games">🏀 No games found for this filter.<br><small>Check back when the tournament begins!</small></div>';
+  if (state.games.length === 0) {
+    container.innerHTML = '<div class="no-games">🏀 No games scheduled for this date.<br><small>Check back when the tournament begins!</small></div>';
     return;
   }
 
-  // Group games by date (already sorted chronologically from fetch)
+  // Group games by date, then by round within each date
   const byDate = {};
-  for (const g of filtered) {
+  for (const g of state.games) {
     const key = g.date ? g.date.slice(0, 10).replace(/-/g, '') : 'unknown';
-    if (!byDate[key]) byDate[key] = [];
-    byDate[key].push(g);
+    if (!byDate[key]) byDate[key] = {};
+    const roundKey = g.roundNum ?? 'other';
+    if (!byDate[key][roundKey]) byDate[key][roundKey] = [];
+    byDate[key][roundKey].push(g);
   }
 
-  // Within each day: live first, then scheduled by time, then completed
+  // Within each round group: live first, then scheduled by time, then completed
   for (const key of Object.keys(byDate)) {
-    byDate[key].sort((a, b) => {
-      if (a.isLive  && !b.isLive)  return -1;
-      if (!a.isLive && b.isLive)   return 1;
-      if (a.isCompleted && !b.isCompleted) return 1;
-      if (!a.isCompleted && b.isCompleted) return -1;
-      return new Date(a.date) - new Date(b.date);
-    });
+    for (const rk of Object.keys(byDate[key])) {
+      byDate[key][rk].sort((a, b) => {
+        if (a.isLive  && !b.isLive)  return -1;
+        if (!a.isLive && b.isLive)   return 1;
+        if (a.isCompleted && !b.isCompleted) return 1;
+        if (!a.isCompleted && b.isCompleted) return -1;
+        return new Date(a.date) - new Date(b.date);
+      });
+    }
   }
 
   const today = dateToKey(new Date());
   let html = '';
   for (const dateKey of Object.keys(byDate).sort()) {
-    const phase = phaseForDate(dateKey);
     const isToday = dateKey === today;
     const isPast  = dateKey < today;
     const label   = isToday ? 'Today' : fmtDateDisplay(dateKey);
-    const sub     = phase ? ` · ${phase.label}` : '';
-    html += `
-      <div class="date-section" id="date-${dateKey}">
-        <div class="date-section-header ${isPast ? 'past' : isToday ? 'today' : 'future'}">
-          <span class="date-section-label">${label}${sub}</span>
-          ${isPast ? '<span class="date-section-tag">Final</span>' : isToday ? '<span class="date-section-tag today-tag">Today</span>' : ''}
-        </div>
-        <div class="games-grid">${byDate[dateKey].map(gameCard).join('')}</div>
-      </div>`;
+
+    const roundKeys = Object.keys(byDate[dateKey]).sort((a, b) => {
+      if (a === 'other') return 1;
+      if (b === 'other') return -1;
+      return Number(a) - Number(b);
+    });
+
+    for (const rk of roundKeys) {
+      const roundName = rk !== 'other' ? ROUND_NAMES[rk] || `Round ${rk}` : '';
+      const dateLabel = isToday ? 'Today' : dateKey.slice(4,6) + '/' + dateKey.slice(6,8);
+      const sectionLabel = `${dateLabel} · ${roundName}`.trim();
+      const liveCount = byDate[dateKey][rk].filter(g => g.isLive).length;
+      const completedCount = byDate[dateKey][rk].filter(g => g.isCompleted).length;
+      const totalCount = byDate[dateKey][rk].length;
+      const allDone = completedCount === totalCount && totalCount > 0;
+
+      html += `
+        <div class="date-section" id="date-${dateKey}-round-${rk}">
+          <div class="date-section-header ${isPast || allDone ? 'past' : isToday ? 'today' : 'future'}">
+            <span class="date-section-label">${sectionLabel}</span>
+            <span class="date-section-stats">
+              ${liveCount > 0 ? `<span class="round-stat live-stat">● ${liveCount} Live</span>` : ''}
+              ${completedCount > 0 ? `<span class="round-stat">${completedCount}/${totalCount} Final</span>` : ''}
+            </span>
+            ${allDone ? '<span class="date-section-tag">Final</span>' : isToday && liveCount > 0 ? '<span class="date-section-tag today-tag">Live</span>' : isToday ? '<span class="date-section-tag today-tag">Today</span>' : ''}
+          </div>
+          <div class="games-grid">${byDate[dateKey][rk].map(gameCard).join('')}</div>
+        </div>`;
+    }
   }
   container.innerHTML = html;
 
   // Auto-scroll to today's section (or nearest future date) on initial load
-  const todayEl = document.getElementById(`date-${today}`);
+  const todayEl = document.querySelector(`[id^="date-${today}"]`);
   if (todayEl) {
     setTimeout(() => todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
@@ -1771,8 +1779,9 @@ function renderDateNav() {
 
   const phaseChips = TOURNAMENT_PHASES.map(p => {
     const isActive = phase && phase.label === p.label;
+    const roundNum = PHASE_ROUND_MAP[p.label] ?? 'null';
     return `<button class="phase-chip ${isActive ? 'active' : ''}"
-                    onclick="jumpToPhase('${p.start}')">${p.label}</button>`;
+                    onclick="jumpToPhase('${p.start}', ${roundNum})">${p.label}</button>`;
   }).join('');
 
   const todayBtn = cur !== today
@@ -1804,13 +1813,25 @@ function renderDateNav() {
 function setDate(key) {
   state.selectedDate = key;
   renderDateNav();
-  // Scroll to that date's section if it exists
-  const el = document.getElementById(`date-${key}`);
+  // Scroll to first section for that date
+  const el = document.querySelector(`[id^="date-${key}-round-"]`);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function jumpToPhase(startKey) {
-  setDate(startKey);
+function jumpToPhase(startKey, roundNum) {
+  state.selectedDate = startKey;
+  renderDateNav();
+  // Try to find the section for this specific round across all dates
+  if (roundNum != null) {
+    const el = document.querySelector(`[id$="-round-${roundNum}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+  }
+  // Fallback: scroll to first section for that date
+  const el = document.querySelector(`[id^="date-${startKey}-round-"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
@@ -1828,6 +1849,8 @@ function switchTab(tabId, btn) {
   // Show/hide sticky subheader (date-nav + round-filter) only for Live Games tab
   const subheader = document.getElementById('sticky-subheader');
   if (subheader) subheader.style.display = tabId === 'games' ? '' : 'none';
+  // Scroll to top when switching tabs
+  window.scrollTo(0, 0);
 }
 
 function setRoundFilter(r) {
