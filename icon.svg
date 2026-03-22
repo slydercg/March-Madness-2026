@@ -1,58 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#0a1628"/>
 
   <!-- Basketball -->
-  <circle cx="50" cy="72" r="26" fill="#E8751A" stroke="#1a0a00" stroke-width="1.5"/>
-  <path d="M24 72 Q50 60 76 72" fill="none" stroke="#1a0a00" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M24 72 Q50 84 76 72" fill="none" stroke="#1a0a00" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M50 46 Q39 72 50 98" fill="none" stroke="#1a0a00" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M50 46 Q61 72 50 98" fill="none" stroke="#1a0a00" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="256" cy="240" r="160" fill="#E8751A" stroke="#c45a00" stroke-width="6"/>
 
-  <!-- Wings — swept back, elongated -->
-  <path d="M50 38 Q28 22 18 30 Q22 42 42 46 Z" fill="rgba(220,245,255,0.78)" stroke="#1a4a2a" stroke-width="1"/>
-  <path d="M50 38 Q72 22 82 30 Q78 42 58 46 Z" fill="rgba(220,245,255,0.78)" stroke="#1a4a2a" stroke-width="1"/>
-  <!-- Lower wings -->
-  <path d="M50 44 Q32 36 26 44 Q30 52 46 50 Z" fill="rgba(220,245,255,0.60)" stroke="#1a4a2a" stroke-width="0.8"/>
-  <path d="M50 44 Q68 36 74 44 Q70 52 54 50 Z" fill="rgba(220,245,255,0.60)" stroke="#1a4a2a" stroke-width="0.8"/>
+  <!-- Basketball seam lines -->
+  <!-- Horizontal seam -->
+  <path d="M96 240 Q256 180 416 240" fill="none" stroke="#1a0a00" stroke-width="5" stroke-linecap="round"/>
+  <path d="M96 240 Q256 300 416 240" fill="none" stroke="#1a0a00" stroke-width="5" stroke-linecap="round"/>
+  <!-- Vertical seam -->
+  <path d="M256 80 Q200 240 256 400" fill="none" stroke="#1a0a00" stroke-width="5" stroke-linecap="round"/>
+  <path d="M256 80 Q312 240 256 400" fill="none" stroke="#1a0a00" stroke-width="5" stroke-linecap="round"/>
 
-  <!-- Abdomen — round and striped -->
-  <ellipse cx="50" cy="60" rx="11" ry="13" fill="#1a5c38"/>
-  <rect x="39" y="54" width="22" height="3.5" fill="#0a1a0f" rx="1.5"/>
-  <rect x="39" y="59" width="22" height="3.5" fill="#0a1a0f" rx="1.5"/>
-  <rect x="39" y="64" width="22" height="3.5" fill="#0a1a0f" rx="1.5"/>
-  <ellipse cx="50" cy="60" rx="11" ry="13" fill="none" stroke="#0a1a0f" stroke-width="1.2"/>
-  <!-- Stinger -->
-  <path d="M47 72 Q50 78 53 72" fill="#0a1a0f"/>
-
-  <!-- Thorax — chunky -->
-  <ellipse cx="50" cy="44" rx="9" ry="7" fill="#1a5c38" stroke="#0a1a0f" stroke-width="1"/>
-
-  <!-- Head — round and large -->
-  <circle cx="50" cy="30" r="14" fill="#1a5c38" stroke="#0a1a0f" stroke-width="1.5"/>
-
-  <!-- MASSIVE compound eyes — the defining feature -->
-  <ellipse cx="41" cy="29" rx="7.5" ry="9" fill="#0d0d0d" stroke="#0a1a0f" stroke-width="1"/>
-  <ellipse cx="59" cy="29" rx="7.5" ry="9" fill="#0d0d0d" stroke="#0a1a0f" stroke-width="1"/>
-  <!-- Eye shine highlights -->
-  <circle cx="38.5" cy="25.5" r="2.5" fill="white" opacity="0.9"/>
-  <circle cx="56.5" cy="25.5" r="2.5" fill="white" opacity="0.9"/>
-  <circle cx="40" cy="30" r="1" fill="white" opacity="0.5"/>
-  <circle cx="58" cy="30" r="1" fill="white" opacity="0.5"/>
-
-  <!-- Frown / mandibles -->
-  <path d="M44 38 Q50 41 56 38" fill="none" stroke="#0a1a0f" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="44" y1="38" x2="42" y2="40" stroke="#0a1a0f" stroke-width="1.2" stroke-linecap="round"/>
-  <line x1="56" y1="38" x2="58" y2="40" stroke="#0a1a0f" stroke-width="1.2" stroke-linecap="round"/>
-
-  <!-- Antennae — short with round tips -->
-  <path d="M45 17 Q40 10 36 7" fill="none" stroke="#0a1a0f" stroke-width="2" stroke-linecap="round"/>
-  <circle cx="35.5" cy="6.5" r="2.8" fill="#0a1a0f"/>
-  <path d="M55 17 Q60 10 64 7" fill="none" stroke="#0a1a0f" stroke-width="2" stroke-linecap="round"/>
-  <circle cx="64.5" cy="6.5" r="2.8" fill="#0a1a0f"/>
-
-  <!-- Legs -->
-  <path d="M40 55 Q30 58 26 62" fill="none" stroke="#0a1a0f" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M40 60 Q30 63 27 68" fill="none" stroke="#0a1a0f" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M60 55 Q70 58 74 62" fill="none" stroke="#0a1a0f" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M60 60 Q70 63 73 68" fill="none" stroke="#0a1a0f" stroke-width="1.5" stroke-linecap="round"/>
-
+  <!-- March Madness text banner -->
+  <rect x="60" y="410" width="392" height="60" rx="12" fill="#1a5c38"/>
+  <text x="256" y="450" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="36" fill="#f0c832" letter-spacing="2">MARCH MADNESS</text>
 </svg>
