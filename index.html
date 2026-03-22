@@ -957,8 +957,8 @@ const GAME_CARD_LABELS  = { 0:'Game', 1:'Game', 2:'Game', 3:'Sweet 16', 4:'Elite
 // Tournament phase date ranges (YYYYMMDD strings)
 const TOURNAMENT_PHASES = [
   { label:'First Four',   start:'20260316', end:'20260318' },
-  { label:'1st Round',    start:'20260319', end:'20260322' },
-  { label:'2nd Round',    start:'20260323', end:'20260324' },
+  { label:'1st Round',    start:'20260319', end:'20260320' },
+  { label:'2nd Round',    start:'20260321', end:'20260322' },
   { label:'Sweet 16',     start:'20260327', end:'20260328' },
   { label:'Elite 8',      start:'20260329', end:'20260330' },
   { label:'Final Four',   start:'20260404', end:'20260404' },
@@ -983,12 +983,12 @@ function phaseForDate(key) {
 
 const ESPN_ROUND_MAP = {
   'First Four': 0, 'first four': 0,
-  'First Round': 1, 'first round': 1,
-  'Second Round': 2, 'second round': 2,
+  'First Round': 1, 'first round': 1, '1st Round': 1, '1st round': 1,
+  'Second Round': 2, 'second round': 2, '2nd Round': 2, '2nd round': 2,
   'Sweet 16': 3, 'sweet 16': 3, 'Sweet Sixteen': 3,
   'Elite Eight': 4, 'elite eight': 4, 'Elite 8': 4,
   'Final Four': 5, 'final four': 5,
-  'National Championship': 6,
+  'National Championship': 6, 'Championship': 6,
 };
 
 // Map TOURNAMENT_PHASES labels to roundNum for date-based fallback
