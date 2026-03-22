@@ -774,6 +774,82 @@
       font-size: 0.88rem;
     }
 
+    /* BRACKET */
+    .bracket-wrap { overflow-x: auto; padding-bottom: 20px; }
+    .bracket-region-tabs {
+      display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .bracket-region-btn {
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 8px 18px; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .bracket-region-btn:hover { border-color: var(--gold); color: var(--text); }
+    .bracket-region-btn.active {
+      background: var(--green); border-color: var(--gold); color: var(--gold-light);
+    }
+    .bracket-grid {
+      display: flex; gap: 20px; align-items: flex-start; min-width: 900px;
+    }
+    .bracket-round {
+      display: flex; flex-direction: column; gap: 0; min-width: 200px; flex-shrink: 0;
+      position: relative;
+    }
+    .bracket-round-title {
+      font-size: 0.7rem; font-weight: 800; color: var(--gold-light);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+      text-align: center; padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .bracket-game {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 10px; margin-bottom: 6px;
+      font-size: 0.75rem; transition: transform 0.1s;
+      position: relative;
+    }
+    .bracket-game:hover { transform: scale(1.02); }
+    .bracket-game.completed { border-left: 3px solid var(--win); }
+    .bracket-game.live { border-left: 3px solid var(--live); }
+    .bracket-game.tbd { border-left: 3px solid var(--border); opacity: 0.6; }
+    .bracket-team {
+      display: flex; align-items: center; gap: 6px; padding: 3px 0;
+    }
+    .bracket-seed {
+      font-size: 0.65rem; color: var(--text-muted); min-width: 16px;
+      text-align: center; font-weight: 700;
+    }
+    .bracket-team-logo { width: 18px; height: 18px; border-radius: 2px; }
+    .bracket-team-name {
+      flex: 1; font-size: 0.75rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bracket-team-name.winner { color: var(--win); font-weight: 800; }
+    .bracket-team-name.loser { color: var(--text-muted); }
+    .bracket-team-score { font-size: 0.78rem; font-weight: 800; min-width: 24px; text-align: right; }
+    .bracket-team-score.winner-score { color: var(--win); }
+    .bracket-winner-bar {
+      background: linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+      border-top: 1px solid rgba(34,197,94,0.2);
+      padding: 4px 8px; margin: 4px -10px -6px; border-radius: 0 0 8px 8px;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.68rem; font-weight: 700; color: var(--win);
+    }
+    .bracket-winner-bar .bw-prize {
+      margin-left: auto; background: rgba(34,197,94,0.2);
+      padding: 1px 6px; border-radius: 4px; font-weight: 800;
+    }
+    .bracket-live-badge {
+      font-size: 0.6rem; color: var(--live); font-weight: 800;
+      position: absolute; top: 4px; right: 8px;
+    }
+    .bracket-status {
+      font-size: 0.6rem; color: var(--text-muted); text-align: center;
+      margin-top: 2px;
+    }
+    .bracket-connector {
+      position: absolute; right: -20px; top: 0; bottom: 0; width: 20px;
+    }
+
     /* PAYOUTS */
     .payouts-wrap { max-width: 700px; }
     .payouts-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
@@ -872,7 +948,10 @@
       <span class="live-badge" id="live-indicator" style="display:none">● Live</span>
       <span class="last-updated" id="last-updated"></span>
       <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh <span id="refresh-countdown"></span></button>
-      <select class="board-selector" id="board-selector" onchange="switchBoard(this.value)"></select>
+      <select class="board-selector" id="board-selector" onchange="switchBoard(this.value)">
+        <option value="0">Board 1</option>
+        <option value="1">Board 2</option>
+      </select>
     </div>
   </header>
   <nav>
@@ -880,6 +959,7 @@
     <button class="tab-btn" onclick="switchTab('grid', this)">📊 Pool Grid</button>
     <button class="tab-btn" onclick="switchTab('leaderboard', this)">🏆 Leaderboard</button>
     <button class="tab-btn" onclick="switchTab('payouts', this)">💰 Payouts</button>
+    <button class="tab-btn" onclick="switchTab('bracket', this)">🏅 Bracket</button>
   </nav>
 
   <div id="sticky-subheader" class="sticky-subheader">
@@ -899,6 +979,9 @@
     </div>
     <div id="tab-payouts" class="tab-content">
       <div id="payouts-container"></div>
+    </div>
+    <div id="tab-bracket" class="tab-content">
+      <div id="bracket-container"></div>
     </div>
   </main>
 </div>
@@ -1220,6 +1303,7 @@ function render() {
   renderGrid();
   renderLeaderboard();
   renderPayouts();
+  renderBracket();
 }
 
 // Highlight score with last digit boxed
@@ -1665,6 +1749,150 @@ function renderLeaderboard() {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ─── BRACKET ─────────────────────────────────────────────────────────────────
+let activeBracketRegion = 'all';
+
+function renderBracket() {
+  const container = document.getElementById('bracket-container');
+  if (!container) return;
+
+  // Collect all games
+  const games = state.allGames;
+
+  // Get unique regions (exclude null)
+  const regions = [...new Set(games.map(g => g.region).filter(Boolean))].sort();
+
+  // Region tabs
+  const regionTabs = [
+    { key: 'all', label: 'Full Bracket' },
+    ...regions.map(r => ({ key: r, label: r }))
+  ];
+
+  let html = `<div class="bracket-region-tabs">`;
+  for (const tab of regionTabs) {
+    html += `<button class="bracket-region-btn ${activeBracketRegion === tab.key ? 'active' : ''}"
+                     onclick="setBracketRegion('${tab.key}')">${tab.label}</button>`;
+  }
+  html += `</div>`;
+
+  // Filter games by selected region
+  const filtered = activeBracketRegion === 'all' ? games : games.filter(g => g.region === activeBracketRegion);
+
+  // Determine which rounds to show
+  // For region view: rounds 1-4 (1st Round through Elite 8)
+  // For "all": show everything including Final Four + Championship
+  const roundsInView = activeBracketRegion === 'all'
+    ? [0, 1, 2, 3, 4, 5, 6]
+    : [1, 2, 3, 4]; // Region brackets only go through Elite 8
+
+  // Group games by round
+  const byRound = {};
+  for (const g of filtered) {
+    if (g.roundNum == null) continue;
+    if (!roundsInView.includes(g.roundNum)) continue;
+    if (!byRound[g.roundNum]) byRound[g.roundNum] = [];
+    byRound[g.roundNum].push(g);
+  }
+
+  // If showing a specific region, also show Final Four/Championship games involving teams from this region
+  if (activeBracketRegion !== 'all') {
+    for (const g of games) {
+      if (g.roundNum >= 5 && g.roundNum != null) {
+        // Check if any team in the game might relate to this region
+        // We'll show Final Four/Championship separately after region bracket
+      }
+    }
+  }
+
+  // Sort games within each round by date/time
+  for (const rk of Object.keys(byRound)) {
+    byRound[rk].sort((a, b) => new Date(a.date) - new Date(b.date));
+  }
+
+  // Calculate spacing for bracket alignment
+  html += `<div class="bracket-wrap"><div class="bracket-grid">`;
+
+  for (const roundNum of roundsInView) {
+    const roundGames = byRound[roundNum] || [];
+    const roundName = ROUND_NAMES[roundNum] || `Round ${roundNum}`;
+    const prize = ROUND_PRIZES[roundNum] || 0;
+
+    // Calculate spacing multiplier for bracket alignment
+    // Each subsequent round should have more spacing to align with previous
+    const baseGap = roundNum <= 1 ? 6 : roundNum === 2 ? 20 : roundNum === 3 ? 50 : roundNum === 4 ? 110 : roundNum === 5 ? 40 : 80;
+
+    html += `<div class="bracket-round" style="gap: ${baseGap}px;">
+      <div class="bracket-round-title">${roundName}<br><span style="color:var(--win);font-size:0.6rem;">$${prize}</span></div>`;
+
+    if (roundGames.length === 0) {
+      html += `<div class="bracket-game tbd">
+        <div class="bracket-team"><span class="bracket-team-name" style="color:var(--text-muted)">TBD</span></div>
+        <div class="bracket-team"><span class="bracket-team-name" style="color:var(--text-muted)">TBD</span></div>
+      </div>`;
+    } else {
+      for (const game of roundGames) {
+        const isLive = game.isLive;
+        const isDone = game.isCompleted;
+        const statusClass = isLive ? 'live' : isDone ? 'completed' : 'tbd';
+
+        const homeWon = game.home.winner && isDone;
+        const awayWon = game.away.winner && isDone;
+        const sw = game.squareWinner;
+
+        const homeLogo = game.home.logo
+          ? `<img class="bracket-team-logo" src="${game.home.logo}" alt="" onerror="this.style.display='none'">`
+          : '';
+        const awayLogo = game.away.logo
+          ? `<img class="bracket-team-logo" src="${game.away.logo}" alt="" onerror="this.style.display='none'">`
+          : '';
+
+        html += `<div class="bracket-game ${statusClass}">`;
+        if (isLive) html += `<span class="bracket-live-badge">● LIVE</span>`;
+
+        // Away team (top)
+        html += `<div class="bracket-team">
+          <span class="bracket-seed">${game.away.seed || ''}</span>
+          ${awayLogo}
+          <span class="bracket-team-name ${awayWon ? 'winner' : isDone ? 'loser' : ''}">${game.away.name}</span>
+          ${(isDone || isLive) ? `<span class="bracket-team-score ${awayWon ? 'winner-score' : ''}">${game.away.score}</span>` : ''}
+        </div>`;
+
+        // Home team (bottom)
+        html += `<div class="bracket-team">
+          <span class="bracket-seed">${game.home.seed || ''}</span>
+          ${homeLogo}
+          <span class="bracket-team-name ${homeWon ? 'winner' : isDone ? 'loser' : ''}">${game.home.name}</span>
+          ${(isDone || isLive) ? `<span class="bracket-team-score ${homeWon ? 'winner-score' : ''}">${game.home.score}</span>` : ''}
+        </div>`;
+
+        // Pool winner bar
+        if (sw && (isDone || isLive)) {
+          html += `<div class="bracket-winner-bar">
+            <span>🏆 ${sw.name}</span>
+            ${sw.prize ? `<span class="bw-prize">+$${sw.prize}</span>` : ''}
+          </div>`;
+        }
+
+        if (isLive) {
+          html += `<div class="bracket-status">${game.statusText}</div>`;
+        }
+
+        html += `</div>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+function setBracketRegion(region) {
+  activeBracketRegion = region;
+  renderBracket();
 }
 
 // ─── PAYOUTS ─────────────────────────────────────────────────────────────────
