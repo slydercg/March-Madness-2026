@@ -1278,6 +1278,44 @@ async function fetchAllGames() {
     // Chronological order
     all.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+    // ─── Fill missing Sweet 16 placeholders ──────────────────────────────
+    // ESPN sometimes hasn't created Sweet 16 games yet even though 2nd Round
+    // is complete. Generate TBD placeholders so the bracket looks complete.
+    const REGIONS = ['East', 'Midwest', 'South', 'West'];
+    for (const region of REGIONS) {
+      const r2Done = all.filter(g => g.roundNum === 2 && g.isCompleted && g.region === region);
+      const s16Exist = all.filter(g => g.roundNum === 3 && g.region === region);
+      if (r2Done.length === 4 && s16Exist.length === 0) {
+        // Get the winners from 2nd Round, paired by seeding bracket position
+        const winners = r2Done.map(g => g.home.winner ? g.home : g.away);
+        // Create 2 placeholder Sweet 16 games (pair 1v4, 2v3 by order)
+        for (let i = 0; i < winners.length; i += 2) {
+          const t1 = winners[i], t2 = winners[i+1] || { name:'TBD', abbr:'', seed:null, logo:null };
+          const placeholderId = `placeholder-s16-${region}-${i}`;
+          if (!seen.has(placeholderId)) {
+            seen.add(placeholderId);
+            const phaseDate = TOURNAMENT_PHASES.find(p => p.label === 'Sweet 16');
+            const placeholderGame = {
+              id: placeholderId,
+              name: `${t1.name} vs ${t2.name}`,
+              date: phaseDate ? `${phaseDate.start.slice(0,4)}-${phaseDate.start.slice(4,6)}-${phaseDate.start.slice(6,8)}T04:00Z` : '',
+              roundNum: 3,
+              region,
+              isCompleted: false, isLive: false,
+              home: { name: t1.name, abbr: t1.abbr, score: 0, seed: t1.seed, logo: t1.logo, winner: false },
+              away: { name: t2.name, abbr: t2.abbr, score: 0, seed: t2.seed, logo: t2.logo, winner: false },
+              squareWinners: BOARDS.map(() => null),
+              get squareWinner() { return this.squareWinners[activeBoardIndex]; },
+              statusText: 'TBD',
+            };
+            all.push(placeholderGame);
+          }
+        }
+      }
+    }
+    // Re-sort after adding placeholders
+    all.sort((a, b) => new Date(a.date) - new Date(b.date));
+
     state.games    = all;   // game cards
     state.allGames = all;   // grid + leaderboard
     state.error    = null;
