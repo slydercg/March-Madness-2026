@@ -1256,24 +1256,45 @@ async function fetchAllGames() {
 
     const today = dateToKey(new Date());
 
-    await Promise.all(dates.map(async date => {
-      // For past dates try both the groups URL and the ungrouped URL — ESPN
-      // sometimes omits completed games from the groups=100 scoreboard.
-      const urls = date <= today
-        ? [`${ESPN_BASE}&dates=${date}`, `${ESPN_BASE_HIST}&dates=${date}`]
-        : [`${ESPN_BASE}&dates=${date}`];
-
-      for (const url of urls) {
+    // Also fetch the live scoreboard (no date filter) to catch games ESPN
+    // adds mid-tournament that don't appear on date-filtered endpoints yet.
+    const liveUrl = ESPN_BASE.replace(/&dates=\d+/, '');
+    const fetchPromises = [
+      ...dates.map(async date => {
+        const urls = date <= today
+          ? [`${ESPN_BASE}&dates=${date}`, `${ESPN_BASE_HIST}&dates=${date}`]
+          : [`${ESPN_BASE}&dates=${date}`];
+        for (const url of urls) {
+          try {
+            const resp = await fetch(url);
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            for (const g of parseEvents(data)) {
+              if (!seen.has(g.id)) { seen.add(g.id); all.push(g); }
+            }
+          } catch { /* skip */ }
+        }
+      }),
+      // Live scoreboard — catches in-progress and recently created games
+      (async () => {
         try {
-          const resp = await fetch(url);
-          if (!resp.ok) continue;
-          const data = await resp.json();
-          for (const g of parseEvents(data)) {
-            if (!seen.has(g.id)) { seen.add(g.id); all.push(g); }
+          const resp = await fetch(liveUrl);
+          if (resp.ok) {
+            const data = await resp.json();
+            for (const g of parseEvents(data)) {
+              if (seen.has(g.id)) {
+                // Update existing game with fresher live data
+                const idx = all.findIndex(x => x.id === g.id);
+                if (idx !== -1) all[idx] = g;
+              } else {
+                seen.add(g.id); all.push(g);
+              }
+            }
           }
         } catch { /* skip */ }
-      }
-    }));
+      })(),
+    ];
+    await Promise.all(fetchPromises);
 
     // Chronological order
     all.sort((a, b) => new Date(a.date) - new Date(b.date));
