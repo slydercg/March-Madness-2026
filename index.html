@@ -1044,7 +1044,7 @@ const TOURNAMENT_PHASES = [
   { label:'1st Round',    start:'20260319', end:'20260320' },
   { label:'2nd Round',    start:'20260321', end:'20260322' },
   { label:'Sweet 16',     start:'20260326', end:'20260328' },
-  { label:'Elite 8',      start:'20260329', end:'20260330' },
+  { label:'Elite 8',      start:'20260328', end:'20260330' },
   { label:'Final Four',   start:'20260404', end:'20260404' },
   { label:'Championship', start:'20260406', end:'20260406' },
 ];
@@ -1053,6 +1053,19 @@ const TOURNEY_END   = '20260406';
 
 function dateToKey(d) {
   return d.toISOString().slice(0,10).replace(/-/g,'');
+}
+// Convert a UTC ISO date string to an Eastern-time date key (YYYYMMDD).
+// Tournament games are US-based; an 8:49 PM EDT tip = 00:49 AM UTC next day,
+// which would wrongly group the game under tomorrow using raw UTC slicing.
+function utcToEasternDateKey(isoStr) {
+  if (!isoStr) return null;
+  const d = new Date(isoStr);
+  // 'America/New_York' handles EST/EDT automatically
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d).split('-'); // YYYY-MM-DD
+  return parts[0] + parts[1] + parts[2];
 }
 function keyToDate(key) {
   return new Date(`${key.slice(0,4)}-${key.slice(4,6)}-${key.slice(6,8)}T12:00:00`);
@@ -1394,7 +1407,7 @@ function renderGames() {
   // Group games by date, then by round within each date
   const byDate = {};
   for (const g of state.games) {
-    const key = g.date ? g.date.slice(0, 10).replace(/-/g, '') : 'unknown';
+    const key = utcToEasternDateKey(g.date) || 'unknown';
     if (!byDate[key]) byDate[key] = {};
     const roundKey = g.roundNum ?? 'other';
     if (!byDate[key][roundKey]) byDate[key][roundKey] = [];
